@@ -30,6 +30,30 @@ import {
 // Configuration
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/PLACE_HOLDER_ID/exec";
 
+// Types
+interface ChecklistItem {
+  id: string;
+  category: string;
+  question: string;
+}
+
+interface ResponseState {
+  status?: string;
+  notes?: string;
+}
+
+interface BatchItem {
+  id: string;
+  assetRaw: string;
+  equipment: string;
+  attachment: string;
+  operation: string;
+  responsesRaw: Record<string, ResponseState>;
+  asset: string;
+  checklist: string;
+  timestamp: string;
+}
+
 // Master Checklist Data based on OSHA 1910.179 & ASME B30
 const CHECKLIST_DATABASE = {
   general: [
@@ -105,26 +129,26 @@ const generateBatchId = () => `BCH-${Date.now().toString(36).toUpperCase()}`;
 
 const App = () => {
   // Session State
-  const [inspectorName, setInspectorName] = useState('');
-  const [customerName, setCustomerName] = useState('');
-  const [batchId, setBatchId] = useState(generateBatchId());
+  const [inspectorName, setInspectorName] = useState<string>('');
+  const [customerName, setCustomerName] = useState<string>('');
+  const [batchId, setBatchId] = useState<string>(generateBatchId());
   
   // Current Item State
-  const [assetName, setAssetName] = useState('');
-  const [equipmentType, setEquipmentType] = useState('Bridge Crane');
-  const [attachmentType, setAttachmentType] = useState('Wire Rope Hoist');
-  const [operationType, setOperationType] = useState('Electric');
-  const [responses, setResponses] = useState({});
+  const [assetName, setAssetName] = useState<string>('');
+  const [equipmentType, setEquipmentType] = useState<string>('Bridge Crane');
+  const [attachmentType, setAttachmentType] = useState<string>('Wire Rope Hoist');
+  const [operationType, setOperationType] = useState<string>('Electric');
+  const [responses, setResponses] = useState<Record<string, ResponseState>>({});
 
   // Editing State
-  const [editingId, setEditingId] = useState(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   // Batch Storage
-  const [batch, setBatch] = useState([]);
+  const [batch, setBatch] = useState<BatchItem[]>([]);
   
   // App Logic State
-  const [submitting, setSubmitting] = useState(false);
-  const [feedback, setFeedback] = useState(null);
+  const [submitting, setSubmitting] = useState<boolean>(false);
+  const [feedback, setFeedback] = useState<{ type: 'success' | 'error', message: string } | null>(null);
 
   const isHoistSelected = useMemo(() => {
     return attachmentType.toLowerCase().includes('hoist');
@@ -140,7 +164,7 @@ const App = () => {
     ];
   }, [equipmentType, attachmentType, operationType, isHoistSelected]);
 
-  const handleResponseChange = (id, status, notes) => {
+  const handleResponseChange = (id: string, status?: string, notes?: string) => {
     setResponses(prev => ({
       ...prev,
       [id]: { 
@@ -171,9 +195,8 @@ const App = () => {
 
     const fullAssetName = `${equipmentType} / ${attachmentType} - ${assetName} (${operationType})`;
     
-    // We store the current questions list to ensure the summary is accurate to the state at time of save
     const checklistSummary = currentQuestions.map(q => {
-      const res = responses[q.id];
+      const res = responses[q.id] || { status: 'N/A', notes: '' };
       return `${q.question} [${res.status}]: ${res.notes || 'No notes'}`;
     }).join(' | ');
 
@@ -201,7 +224,7 @@ const App = () => {
     if (el) el.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const loadFromBatch = (item) => {
+  const loadFromBatch = (item: BatchItem) => {
     setEditingId(item.id);
     setAssetName(item.assetRaw);
     setEquipmentType(item.equipment);
@@ -214,8 +237,8 @@ const App = () => {
     if (el) el.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const removeFromBatch = (e, id) => {
-    e.stopPropagation(); // Don't trigger loadFromBatch
+  const removeFromBatch = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
     if (editingId === id) clearForm();
     setBatch(prev => prev.filter(item => item.id !== id));
   };
@@ -231,7 +254,7 @@ const App = () => {
       customer: customerName,
       inspector: inspectorName,
       totalItems: batch.length,
-      inspections: batch.map(({ id, ...rest }) => rest) // Clean IDs for backend
+      inspections: batch.map(({ id, ...rest }) => rest)
     };
 
     try {
@@ -437,7 +460,7 @@ const App = () => {
                     <textarea 
                       placeholder="Maintenance notes or repair recommendations..."
                       className="w-full text-xs bg-white p-3 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 transition-all resize-none"
-                      rows="1"
+                      rows={1}
                       value={responses[q.id]?.notes || ''}
                       onChange={(e) => handleResponseChange(q.id, undefined, e.target.value)}
                     />
@@ -554,9 +577,9 @@ const App = () => {
               
               <button
                 onClick={submitFullBatch}
-                disabled={batch.length === 0 || submitting || editingId}
+                disabled={batch.length === 0 || submitting || !!editingId}
                 className={`w-full md:w-auto px-10 py-4 rounded-2xl font-black text-sm tracking-widest uppercase shadow-2xl transition-all flex items-center justify-center gap-3 active:scale-95 ${
-                  batch.length === 0 || submitting || editingId
+                  batch.length === 0 || submitting || !!editingId
                     ? 'bg-slate-700 text-slate-500 cursor-not-allowed border border-slate-600'
                     : 'bg-blue-600 hover:bg-blue-500 text-white hover:shadow-blue-500/20 hover:-translate-y-1'
                 }`}
