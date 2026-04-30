@@ -846,7 +846,7 @@ export default function App() {
 
               <button
                 onClick={submitFullBatch}
-                disabled={batch.length === 0 || submitting || editingId}
+                disabled={batch.length === 0 || submitting || !!editingId}
                 className={`w-full md:w-auto px-10 py-4 rounded-2xl font-black text-sm tracking-widest uppercase shadow-2xl transition-all flex items-center justify-center gap-3 active:scale-95 ${
                   batch.length === 0 || submitting || editingId
                     ? 'bg-slate-700 text-slate-500 cursor-not-allowed border border-slate-600'
