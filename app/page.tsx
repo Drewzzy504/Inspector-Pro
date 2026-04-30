@@ -131,7 +131,11 @@ const App = () => {
   // Session State
   const [inspectorName, setInspectorName] = useState<string>('');
   const [customerName, setCustomerName] = useState<string>('');
-  const [batchId, setBatchId] = useState<string>(generateBatchId());
+  const [batchId, setBatchId] = useState<string>('');
+
+  useEffect(() => {
+    setBatchId(generateBatchId());
+  }, []);
   
   // Current Item State
   const [assetName, setAssetName] = useState<string>('');
