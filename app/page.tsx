@@ -134,9 +134,9 @@ const App = () => {
     return [
       ...CHECKLIST_DATABASE.general,
       ...(isHoistSelected ? CHECKLIST_DATABASE.lifting : []),
-      ...(CHECKLIST_DATABASE.equipment[equipmentType] || []),
-      ...(CHECKLIST_DATABASE.attachment[attachmentType] || []),
-      ...(CHECKLIST_DATABASE.operation[operationType] || [])
+      ...(CHECKLIST_DATABASE.equipment[equipmentType as keyof typeof CHECKLIST_DATABASE.equipment] || []),
+      ...(CHECKLIST_DATABASE.attachment[attachmentType as keyof typeof CHECKLIST_DATABASE.attachment] || []),
+      ...(CHECKLIST_DATABASE.operation[operationType as keyof typeof CHECKLIST_DATABASE.operation] || [])
     ];
   }, [equipmentType, attachmentType, operationType, isHoistSelected]);
 
